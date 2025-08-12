@@ -24,12 +24,13 @@ func AnalyzeData(data []byte, chunkCount int) AnalysisResult {
 		chunkSize = 1
 	}
 
-	vowelsChan := make(chan int)
-	lettersChan := make(chan int)
-	spacesChan := make(chan int)
-	specialsChan := make(chan int)
-	linesChan := make(chan int)
-	digitsChan := make(chan int)
+	// Channels
+	vowelsChan := make(chan int, chunkCount)
+	lettersChan := make(chan int, chunkCount)
+	spacesChan := make(chan int, chunkCount)
+	specialsChan := make(chan int, chunkCount)
+	linesChan := make(chan int, chunkCount)
+	digitsChan := make(chan int, chunkCount)
 
 	var wg sync.WaitGroup
 
@@ -50,8 +51,8 @@ func AnalyzeData(data []byte, chunkCount int) AnalysisResult {
 				switch {
 				case ch == '\n':
 					lines++
-				case ch == 'a' || ch == 'e' || ch == 'i' || ch == 'o' || ch == 'u' ||
-					ch == 'A' || ch == 'E' || ch == 'I' || ch == 'O' || ch == 'U':
+				case ch == 'a', ch == 'e', ch == 'i', ch == 'o', ch == 'u',
+					ch == 'A', ch == 'E', ch == 'I', ch == 'O', ch == 'U':
 					vowels++
 					letters++
 				case (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'):
@@ -84,8 +85,8 @@ func AnalyzeData(data []byte, chunkCount int) AnalysisResult {
 		close(digitsChan)
 	}()
 
+	// Aggregate results
 	var vowels, letters, spaces, specials, lines, digits int
-
 	for vowelsChan != nil || lettersChan != nil || spacesChan != nil || specialsChan != nil || linesChan != nil || digitsChan != nil {
 		select {
 		case v, ok := <-vowelsChan:

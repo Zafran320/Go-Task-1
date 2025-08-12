@@ -1,18 +1,19 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 )
 
 func main() {
+	InitDB()
+	defer DB.Close()
+
 	http.HandleFunc("/signup", signUpHandler)
 	http.HandleFunc("/signin", signInHandler)
-	http.HandleFunc("/analyze", analyzeHandler)
 	http.HandleFunc("/upload", uploadHandler)
+	http.HandleFunc("/analyze", analyzeHandler)
 
-	fmt.Println("Server running on http://localhost:8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		panic(err)
-	}
+	log.Println(" Server running on http://localhost:8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }

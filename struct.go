@@ -1,8 +1,8 @@
 package main
 
 type User struct {
-	Name     string `json:"name"`
-	Password string `json:"password"`
+	Username     string `json:"username"`
+	PasswordHash string `json:"password_hash"`
 }
 
 type AnalysisResult struct {
@@ -23,7 +23,3 @@ type AuthResponse struct {
 type MessageResponse struct {
 	Message string `json:"message"`
 }
-
-var userStore = map[string]string{}
-
-const authToken = "secure-token-123"
