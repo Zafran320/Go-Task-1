@@ -2,27 +2,24 @@ package main
 
 import (
 	"errors"
-	"net/http"
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtKey = []byte("my-secret-key") // You can change this to a secure env var
+var jwtKey = []byte("my-secret-key")
 
-// Create a JWT token for a given username
 func createToken(username string) (string, error) {
 	claims := jwt.MapClaims{
 		"username": username,
-		"exp":      time.Now().Add(24 * time.Hour).Unix(), // Token valid for 24 hours
+		"exp":      time.Now().Add(24 * time.Hour).Unix(),
 	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(jwtKey)
 }
 
-// Validate a JWT token and extract the username
 func checkToken(tokenStr string) (string, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
@@ -44,22 +41,21 @@ func checkToken(tokenStr string) (string, error) {
 	return username, nil
 }
 
-// Middleware to protect routes with JWT
-func requireToken(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
+func RequireToken() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
 		if !strings.HasPrefix(authHeader, "Bearer ") {
-			http.Error(w, "Missing or invalid token", http.StatusUnauthorized)
+			c.AbortWithStatusJSON(401, gin.H{"error": "Missing or invalid token"})
 			return
 		}
 
 		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 		_, err := checkToken(tokenStr)
 		if err != nil {
-			http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+			c.AbortWithStatusJSON(401, gin.H{"error": "Invalid or expired token"})
 			return
 		}
 
-		next(w, r)
+		c.Next()
 	}
 }

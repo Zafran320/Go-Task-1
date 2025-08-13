@@ -1,154 +1,130 @@
 package main
 
 import (
-	"encoding/json"
 	"io"
-	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func signUpHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
+func signUpHandler(c *gin.Context) {
 	var user User
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid JSON"})
 		return
 	}
 	if user.Username == "" || user.PasswordHash == "" {
-		http.Error(w, "Username and password are required", http.StatusBadRequest)
+		c.JSON(400, gin.H{"error": "Username and password are required"})
 		return
 	}
 
 	var exists bool
 	err := DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE username = ?)", user.Username).Scan(&exists)
 	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		c.JSON(500, gin.H{"error": "Database error"})
 		return
 	}
 	if exists {
-		http.Error(w, "Username already exists", http.StatusConflict)
+		c.JSON(409, gin.H{"error": "Username already exists"})
 		return
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.PasswordHash), bcrypt.DefaultCost)
 	if err != nil {
-		http.Error(w, "Failed to hash password", http.StatusInternalServerError)
+		c.JSON(500, gin.H{"error": "Failed to hash password"})
 		return
 	}
 
 	_, err = DB.Exec("INSERT INTO users (username, password_hash, time) VALUES (?, ?, ?)", user.Username, string(hashedPassword), time.Now())
 	if err != nil {
-		http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		c.JSON(500, gin.H{"error": "Failed to create user"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(MessageResponse{Message: "Signup successful"})
+	c.JSON(200, MessageResponse{Message: "Signup successful"})
 }
 
-func signInHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
+func signInHandler(c *gin.Context) {
 	var user User
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid JSON"})
 		return
 	}
 	if user.Username == "" || user.PasswordHash == "" {
-		http.Error(w, "Username and password are required", http.StatusBadRequest)
+		c.JSON(400, gin.H{"error": "Username and password are required"})
 		return
 	}
 
 	var storedHash string
 	err := DB.QueryRow("SELECT password_hash FROM users WHERE username = ?", user.Username).Scan(&storedHash)
 	if err != nil {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		c.JSON(401, gin.H{"error": "Invalid credentials"})
 		return
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(user.PasswordHash))
 	if err != nil {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		c.JSON(401, gin.H{"error": "Invalid credentials"})
 		return
 	}
 
 	token, err := createToken(user.Username)
 	if err != nil {
-		http.Error(w, "Could not create token", http.StatusInternalServerError)
+		c.JSON(500, gin.H{"error": "Could not create token"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(AuthResponse{Token: token})
+	c.JSON(200, AuthResponse{Token: token})
 }
 
-func uploadHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	if err := r.ParseMultipartForm(10 << 20); err != nil {
-		http.Error(w, "Failed to parse form", http.StatusBadRequest)
-		return
-	}
-
-	file, _, err := r.FormFile("file")
+func uploadHandler(c *gin.Context) {
+	file, err := c.FormFile("file")
 	if err != nil {
-		http.Error(w, "Missing file", http.StatusBadRequest)
+		c.JSON(400, gin.H{"error": "Missing file"})
 		return
 	}
-	defer file.Close()
 
-	data, err := io.ReadAll(file)
+	f, err := file.Open()
 	if err != nil {
-		http.Error(w, "Failed to read file", http.StatusBadRequest)
+		c.JSON(400, gin.H{"error": "Failed to open file"})
+		return
+	}
+	defer f.Close()
+
+	data, err := io.ReadAll(f)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Failed to read file"})
 		return
 	}
 
 	chunks := 4
-	if val := r.URL.Query().Get("chunks"); val != "" {
-		if c, err := strconv.Atoi(val); err == nil && c > 0 {
-			chunks = c
+	if val := c.Query("chunks"); val != "" {
+		if cVal, err := strconv.Atoi(val); err == nil && cVal > 0 {
+			chunks = cVal
 		}
 	}
 
 	result := AnalyzeData(data, chunks)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
+	c.JSON(200, result)
 }
 
-func analyzeHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	body, err := io.ReadAll(r.Body)
+func analyzeHandler(c *gin.Context) {
+	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		http.Error(w, "Failed to read body", http.StatusBadRequest)
+		c.JSON(400, gin.H{"error": "Failed to read body"})
 		return
 	}
-	defer r.Body.Close()
+	defer c.Request.Body.Close()
 
 	chunks := 4
-	if val := r.URL.Query().Get("chunks"); val != "" {
-		if c, err := strconv.Atoi(val); err == nil && c > 0 {
-			chunks = c
+	if val := c.Query("chunks"); val != "" {
+		if cVal, err := strconv.Atoi(val); err == nil && cVal > 0 {
+			chunks = cVal
 		}
 	}
 
 	result := AnalyzeData(body, chunks)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
+	c.JSON(200, result)
 }

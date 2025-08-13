@@ -12,7 +12,6 @@ var DB *sql.DB
 func InitDB() {
 	var err error
 
-	// ✅ Use your actual DB name (no spaces)
 	dsn := "root:@tcp(127.0.0.1:3306)/file analyzer?parseTime=true"
 
 	DB, err = sql.Open("mysql", dsn)
