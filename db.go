@@ -3,25 +3,39 @@ package main
 import (
 	"database/sql"
 	"log"
+	"os"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
 )
 
 var DB *sql.DB
 
 func InitDB() {
-	var err error
 
-	dsn := "root:@tcp(127.0.0.1:3306)/file analyzer?parseTime=true"
-
-	DB, err = sql.Open("mysql", dsn)
+	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+		log.Fatal("Error loading .env file")
+	}
+
+	cfg := mysql.Config{
+		User:                 os.Getenv("DB_USER"),
+		Passwd:               os.Getenv("DB_PASSWORD"),
+		Net:                  "tcp",
+		Addr:                 os.Getenv("DB_HOST") + ":" + os.Getenv("DB_PORT"),
+		DBName:               os.Getenv("DB_NAME"),
+		AllowNativePasswords: true,
+		ParseTime:            true,
+	}
+
+	DB, err = sql.Open("mysql", cfg.FormatDSN())
+	if err != nil {
+		log.Fatal("sql.Open error:", err)
 	}
 
 	if err = DB.Ping(); err != nil {
 		log.Fatal("Database ping failed:", err)
 	}
 
-	log.Println("Connected to MySQL")
+	log.Println(" Connected to MySQL successfully")
 }

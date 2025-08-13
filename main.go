@@ -15,15 +15,12 @@ func main() {
 		log.Fatalf("Failed to set trusted proxies: %v", err)
 	}
 
-	//  DB init
 	InitDB()
 	defer DB.Close()
 
-	// Public routes
 	r.POST("/signup", signUpHandler)
 	r.POST("/signin", signInHandler)
 
-	// Protected routes
 	r.POST("/upload", RequireToken(), uploadHandler)
 	r.POST("/analyze", RequireToken(), analyzeHandler)
 
