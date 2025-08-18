@@ -3,31 +3,24 @@ package main
 import (
 	"database/sql"
 	"log"
-	"os"
 
 	"github.com/go-sql-driver/mysql"
-	"github.com/joho/godotenv"
 )
 
 var DB *sql.DB
 
 func InitDB() {
-
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
 	cfg := mysql.Config{
-		User:                 os.Getenv("DB_USER"),
-		Passwd:               os.Getenv("DB_PASSWORD"),
+		User:                 Config.DBUser,
+		Passwd:               Config.DBPassword,
 		Net:                  "tcp",
-		Addr:                 os.Getenv("DB_HOST") + ":" + os.Getenv("DB_PORT"),
-		DBName:               os.Getenv("DB_NAME"),
+		Addr:                 Config.DBHost + ":" + Config.DBPort,
+		DBName:               Config.DBName,
 		AllowNativePasswords: true,
 		ParseTime:            true,
 	}
 
+	var err error
 	DB, err = sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
 		log.Fatal("sql.Open error:", err)
@@ -37,5 +30,5 @@ func InitDB() {
 		log.Fatal("Database ping failed:", err)
 	}
 
-	log.Println(" Connected to MySQL successfully")
+	log.Println("Connected to MySQL successfully")
 }

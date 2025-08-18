@@ -9,6 +9,7 @@ import (
 func main() {
 
 	gin.SetMode(gin.ReleaseMode)
+	InitConfig()
 
 	r := gin.Default()
 	if err := r.SetTrustedProxies([]string{"127.0.0.1"}); err != nil {
