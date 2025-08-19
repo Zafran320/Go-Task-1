@@ -61,8 +61,12 @@ func AnalyzeData(data []byte, chunkCount int) AnalysisResult {
 					spaces++
 				case ch >= '0' && ch <= '9':
 					digits++
-				default:
+				case ch == '!', ch == '@', ch == '#', ch == '$', ch == '%', ch == '^',
+					ch == '&', ch == '*', ch == '(', ch == ')', ch == '-', ch == '_',
+					ch == '=', ch == '+', ch == '{', ch == '}', ch == '[', ch == ']', ch == '|',
+					ch == ':', ch == ';', ch == '"', ch == '\'', ch == '<', ch == '>', ch == ',', ch == '.', ch == '?', ch == '/':
 					specials++
+
 				}
 			}
 

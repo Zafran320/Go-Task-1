@@ -7,7 +7,6 @@ import (
 )
 
 func main() {
-
 	gin.SetMode(gin.ReleaseMode)
 	InitConfig()
 
@@ -19,11 +18,11 @@ func main() {
 	InitDB()
 	defer DB.Close()
 
-	r.POST("/signup", signUpHandler)
-	r.POST("/signin", signInHandler)
+	r.POST("/signup", SignUpHandler)
+	r.POST("/signin", SignInHandler)
 
-	r.POST("/upload", RequireToken(), uploadHandler)
-	r.POST("/analyze", RequireToken(), analyzeHandler)
+	r.POST("/upload", RequireToken(), UploadHandler)
+	r.POST("/analyze", RequireToken(), AnalyzeHandler)
 
 	log.Println("Server running on http://localhost:8080")
 	r.Run(":8080")
