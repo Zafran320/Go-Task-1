@@ -1,6 +1,7 @@
-package main
+package api
 
 import (
+	"backend-auth/service"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -22,6 +23,6 @@ func AnalyzeHandler(c *gin.Context) {
 		return
 	}
 
-	result := AnalyzeData([]byte(req.Data), req.Chunks)
+	result := service.AnalyzeData([]byte(req.Data), req.Chunks)
 	c.JSON(http.StatusOK, result)
 }

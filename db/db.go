@@ -1,8 +1,10 @@
-package main
+package db
 
 import (
 	"database/sql"
 	"log"
+
+	"backend-auth/config"
 
 	"github.com/go-sql-driver/mysql"
 )
@@ -11,11 +13,11 @@ var DB *sql.DB
 
 func InitDB() {
 	cfg := mysql.Config{
-		User:                 Config.DBUser,
-		Passwd:               Config.DBPassword,
+		User:                 config.Config.DBUser,
+		Passwd:               config.Config.DBPassword,
 		Net:                  "tcp",
-		Addr:                 Config.DBHost + ":" + Config.DBPort,
-		DBName:               Config.DBName,
+		Addr:                 config.Config.DBHost + ":" + config.Config.DBPort,
+		DBName:               config.Config.DBName,
 		AllowNativePasswords: true,
 		ParseTime:            true,
 	}

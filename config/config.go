@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"log"
@@ -16,7 +16,6 @@ var Config struct {
 }
 
 func InitConfig() {
-
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, relying on system environment variables")
 	}
@@ -28,6 +27,9 @@ func InitConfig() {
 	Config.DBHost = viper.GetString("DB_HOST")
 	Config.DBPort = viper.GetString("DB_PORT")
 	Config.DBName = viper.GetString("DB_NAME")
+
+	//  Added for JWT debugging
+	log.Println("JWT_SECRET loaded:", viper.GetString("JWT_SECRET"))
 
 	log.Println("Configuration loaded successfully")
 }

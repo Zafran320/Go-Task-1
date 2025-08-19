@@ -3,27 +3,36 @@ package main
 import (
 	"log"
 
+	"backend-auth/config"
+	"backend-auth/db"
+	"backend-auth/router"
+
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	// Set Gin to release mode for cleaner logs
 	gin.SetMode(gin.ReleaseMode)
-	InitConfig()
 
+	// Load configuration and initialize database
+	config.InitConfig()
+	db.InitDB()
+	defer db.DB.Close()
+
+	// Create Gin router
 	r := gin.Default()
+
+	// Set trusted proxy (localhost)
 	if err := r.SetTrustedProxies([]string{"127.0.0.1"}); err != nil {
 		log.Fatalf("Failed to set trusted proxies: %v", err)
 	}
 
-	InitDB()
-	defer DB.Close()
+	// Setup routes
+	router.SetupRoutes(r)
 
-	r.POST("/signup", SignUpHandler)
-	r.POST("/signin", SignInHandler)
-
-	r.POST("/upload", RequireToken(), UploadHandler)
-	r.POST("/analyze", RequireToken(), AnalyzeHandler)
-
+	// Start server
 	log.Println("Server running on http://localhost:8080")
-	r.Run(":8080")
+	if err := r.Run(":8080"); err != nil {
+		log.Fatalf("Server failed to start: %v", err)
+	}
 }

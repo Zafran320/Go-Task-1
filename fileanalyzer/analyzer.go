@@ -1,16 +1,18 @@
-package main
+package fileanalyzer
 
 import (
 	"sync"
 	"time"
+
+	"backend-auth/models"
 )
 
-func AnalyzeData(data []byte, chunkCount int) AnalysisResult {
+func AnalyzeData(data []byte, chunkCount int) models.AnalysisResult {
 	start := time.Now()
 	totalLen := len(data)
 
 	if totalLen == 0 {
-		return AnalysisResult{ChunkCount: 0, ExecutionTime: time.Since(start).Nanoseconds()}
+		return models.AnalysisResult{ChunkCount: 0, ExecutionTime: time.Since(start).Nanoseconds()}
 	}
 
 	if chunkCount < 1 {
@@ -24,7 +26,6 @@ func AnalyzeData(data []byte, chunkCount int) AnalysisResult {
 		chunkSize = 1
 	}
 
-	// Channels
 	vowelsChan := make(chan int, chunkCount)
 	lettersChan := make(chan int, chunkCount)
 	spacesChan := make(chan int, chunkCount)
@@ -66,7 +67,6 @@ func AnalyzeData(data []byte, chunkCount int) AnalysisResult {
 					ch == '=', ch == '+', ch == '{', ch == '}', ch == '[', ch == ']', ch == '|',
 					ch == ':', ch == ';', ch == '"', ch == '\'', ch == '<', ch == '>', ch == ',', ch == '.', ch == '?', ch == '/':
 					specials++
-
 				}
 			}
 
@@ -89,7 +89,6 @@ func AnalyzeData(data []byte, chunkCount int) AnalysisResult {
 		close(digitsChan)
 	}()
 
-	// Aggregate results
 	var vowels, letters, spaces, specials, lines, digits int
 	for vowelsChan != nil || lettersChan != nil || spacesChan != nil || specialsChan != nil || linesChan != nil || digitsChan != nil {
 		select {
@@ -132,7 +131,7 @@ func AnalyzeData(data []byte, chunkCount int) AnalysisResult {
 		}
 	}
 
-	return AnalysisResult{
+	return models.AnalysisResult{
 		Vowels:            vowels,
 		Letters:           letters,
 		Spaces:            spaces,

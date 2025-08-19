@@ -1,18 +1,19 @@
-package main
+package service
 
 import (
 	"errors"
+
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/spf13/viper"
 )
 
 var jwtKey = []byte(viper.GetString("JWT_SECRET"))
 
-func createToken(username string) (string, error) {
+func CreateToken(username string) (string, error) {
 	claims := jwt.MapClaims{
 		"username": username,
 		"exp":      time.Now().Add(24 * time.Hour).Unix(),

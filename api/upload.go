@@ -1,9 +1,12 @@
-package main
+package api
 
 import (
-	"io"
 	"net/http"
+
+	"io"
 	"strconv"
+
+	"backend-auth/fileanalyzer"
 
 	"github.com/gin-gonic/gin"
 )
@@ -40,6 +43,6 @@ func UploadHandler(c *gin.Context) {
 		return
 	}
 
-	result := AnalyzeData(data, cVal)
+	result := fileanalyzer.AnalyzeData(data, cVal)
 	c.JSON(http.StatusOK, result)
 }

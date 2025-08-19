@@ -1,6 +1,8 @@
-package main
+package api
 
 import (
+	"backend-auth/db"
+	"backend-auth/models"
 	"net/http"
 	"time"
 
@@ -9,7 +11,7 @@ import (
 )
 
 func SignUpHandler(c *gin.Context) {
-	var user User
+	var user models.User
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
 		return
@@ -20,7 +22,7 @@ func SignUpHandler(c *gin.Context) {
 	}
 
 	var exists bool
-	err := DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE username = ?)", user.Username).Scan(&exists)
+	err := db.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE username = ?)", user.Username).Scan(&exists)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 		return
@@ -36,11 +38,11 @@ func SignUpHandler(c *gin.Context) {
 		return
 	}
 
-	_, err = DB.Exec("INSERT INTO users (username, password_hash, time) VALUES (?, ?, ?)", user.Username, string(hashedPassword), time.Now())
+	_, err = db.DB.Exec("INSERT INTO users (username, password_hash, time) VALUES (?, ?, ?)", user.Username, string(hashedPassword), time.Now())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
 
-	c.JSON(http.StatusOK, MessageResponse{Message: "Signup successful"})
+	c.JSON(http.StatusOK, models.MessageResponse{Message: "Signup successful"})
 }
