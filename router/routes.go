@@ -1,6 +1,7 @@
 package router
 
 import (
+	"backend-auth/db"
 	"backend-auth/middleware"
 
 	"backend-auth/api"
@@ -8,10 +9,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRoutes(r *gin.Engine) {
+func SetupRoutes(r *gin.Engine, DB *db.DB) {
 	// Route bindings
-	r.POST("/signup", api.SignUpHandler)
-	r.POST("/signin", api.SignInHandler)
-	r.POST("/upload", middleware.RequireToken(), api.UploadHandler)
-	r.POST("/analyze", middleware.RequireToken(), api.AnalyzeHandler)
+
+	handler := api.NewHandler(DB)
+
+	r.POST("/signup", handler.SignUpHandler)
+	r.POST("/signin", handler.SignInHandler)
+	r.POST("/upload", middleware.RequireToken(), handler.UploadHandler)
+	r.POST("/analyze", middleware.RequireToken(), handler.AnalyzeHandler)
 }

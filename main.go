@@ -16,8 +16,10 @@ func main() {
 
 	// Load configuration and initialize database
 	config.InitConfig()
-	db.InitDB()
-	defer db.DB.Close()
+
+	DB := db.InitDB()
+
+	defer DB.Db.Close()
 
 	// Create Gin router
 	r := gin.Default()
@@ -28,7 +30,7 @@ func main() {
 	}
 
 	// Setup routes
-	router.SetupRoutes(r)
+	router.SetupRoutes(r, DB)
 
 	// Start server
 	log.Println("Server running on http://localhost:8080")

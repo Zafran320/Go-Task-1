@@ -1,22 +1,12 @@
-package api
+package Analyze
 
 import (
-	"backend-auth/db"
-	"backend-auth/service"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-type Handler struct {
-	DB *db.DB
-}
-
-func NewHandler(db *db.DB) *Handler {
-	return &Handler{DB: db}
-}
-
-func (r *Handler) AnalyzeHandler(c *gin.Context) {
+func AnalyzeHandler(c *gin.Context) {
 	var req struct {
 		Data   string `json:"data"`
 		Chunks int    `json:"chunks"`
@@ -32,6 +22,6 @@ func (r *Handler) AnalyzeHandler(c *gin.Context) {
 		return
 	}
 
-	result := service.AnalyzeData([]byte(req.Data), req.Chunks)
+	result := AnalyzeData([]byte(req.Data), req.Chunks)
 	c.JSON(http.StatusOK, result)
 }

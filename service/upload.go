@@ -5,6 +5,10 @@ import (
 	"bytes"
 )
 
+// type Services struct {
+// 	dbService dbService
+// }
+
 func AnalyzeData(data []byte, chunks int) models.AnalysisResult {
 	if chunks < 1 || len(data) == 0 {
 		return models.AnalysisResult{

@@ -9,9 +9,11 @@ import (
 	"github.com/go-sql-driver/mysql"
 )
 
-var DB *sql.DB
+type DB struct {
+	Db *sql.DB
+}
 
-func InitDB() {
+func InitDB() *DB {
 	cfg := mysql.Config{
 		User:                 config.Config.DBUser,
 		Passwd:               config.Config.DBPassword,
@@ -23,14 +25,16 @@ func InitDB() {
 	}
 
 	var err error
-	DB, err = sql.Open("mysql", cfg.FormatDSN())
+	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
 		log.Fatal("sql.Open error:", err)
 	}
 
-	if err = DB.Ping(); err != nil {
+	if err = db.Ping(); err != nil {
 		log.Fatal("Database ping failed:", err)
 	}
 
 	log.Println("Connected to MySQL successfully")
+
+	return &DB{Db: db}
 }
