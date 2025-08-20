@@ -2,11 +2,10 @@ package api
 
 import (
 	"backend-auth/models"
+	"backend-auth/service"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func (r *Handler) SignUpHandler(c *gin.Context) {
@@ -20,26 +19,20 @@ func (r *Handler) SignUpHandler(c *gin.Context) {
 		return
 	}
 
-	var exists bool
-	err := r.DB.Db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE username = ?)", user.Username).Scan(&exists)
+	err := service.HandleUserQuery(r.DB.Db, user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
-		return
-	}
-	if exists {
-		c.JSON(http.StatusConflict, gin.H{"error": "Username already exists"})
-		return
-	}
-
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.PasswordHash), bcrypt.DefaultCost)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
-		return
-	}
-
-	_, err = r.DB.Db.Exec("INSERT INTO users (username, password_hash, time) VALUES (?, ?, ?)", user.Username, string(hashedPassword), time.Now())
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+		switch err.Error() {
+		case "db_error":
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		case "user_exists":
+			c.JSON(http.StatusConflict, gin.H{"error": "Username already exists"})
+		case "hash_error":
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		case "insert_error":
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Signup failed"})
+		}
 		return
 	}
 

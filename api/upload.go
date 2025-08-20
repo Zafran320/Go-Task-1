@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 
+	"backend-auth/db"
 	"io"
 	"strconv"
 
@@ -10,6 +11,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+type Handler struct {
+	DB *db.DB
+}
+
+func NewHandler(db *db.DB) *Handler {
+	return &Handler{DB: db}
+}
 
 func (r *Handler) UploadHandler(c *gin.Context) {
 	file, err := c.FormFile("file")

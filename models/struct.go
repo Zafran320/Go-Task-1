@@ -1,4 +1,9 @@
-package db
+package models
+
+type User struct {
+	Username     string `json:"username"`
+	PasswordHash string `json:"password_hash"`
+}
 
 type AnalysisResult struct {
 	Vowels            int   `json:"vowels"`
@@ -17,4 +22,10 @@ type AuthResponse struct {
 
 type MessageResponse struct {
 	Message string `json:"message"`
+}
+
+type Chunk struct {
+	Index int    `json:"index"`
+	Size  int    `json:"size"`
+	Data  []byte `json:"data"`
 }

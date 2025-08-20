@@ -14,7 +14,6 @@ func main() {
 	// Set Gin to release mode for cleaner logs
 	gin.SetMode(gin.ReleaseMode)
 
-	// Load configuration and initialize database
 	config.InitConfig()
 
 	DB := db.InitDB()
