@@ -1,13 +1,11 @@
 package api
 
 import (
-	"net/http"
-
 	"backend-auth/db"
+	fileanalyzer "backend-auth/file_analyzer"
 	"io"
+	"net/http"
 	"strconv"
-
-	"backend-auth/fileanalyzer"
 
 	"github.com/gin-gonic/gin"
 )
