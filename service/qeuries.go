@@ -1,37 +1,33 @@
 package service
 
 import (
-	"backend-auth/models"
+	"backend-auth/db"
+	"backend-auth/middleware"
 	"database/sql"
 	"errors"
-	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
-func HandleUserQuery(db *sql.DB, user models.User) error {
-	switch {
-	default:
-		var exists bool
-		err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE username = ?)", user.Username).Scan(&exists)
-		if err != nil {
-			return errors.New("db_error")
-		}
-		if exists {
-			return errors.New("user_exists")
-		}
-
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.PasswordHash), bcrypt.DefaultCost)
-		if err != nil {
-			return errors.New("hash_error")
-		}
-
-		_, err = db.Exec("INSERT INTO users (username, password_hash, time) VALUES (?, ?, ?)",
-			user.Username, string(hashedPassword), time.Now())
-		if err != nil {
-			return errors.New("insert_error")
-		}
-
-		return nil
+func SignIn(dbConn *sql.DB, username, password string) (string, error) {
+	if username == "" || password == "" {
+		return "", errors.New("username and password are required")
 	}
+
+	storedHash, err := db.GetPassword(dbConn, username)
+	if err != nil {
+		return "", errors.New("invalid credentials")
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(password))
+	if err != nil {
+		return "", errors.New("invalid credentials")
+	}
+
+	token, err := middleware.CreateToken(username)
+	if err != nil {
+		return "", errors.New("could not create token")
+	}
+
+	return token, nil
 }

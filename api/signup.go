@@ -1,8 +1,8 @@
 package api
 
 import (
+	"backend-auth/db"
 	"backend-auth/models"
-	"backend-auth/service"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -19,7 +19,7 @@ func (r *Handler) SignUpHandler(c *gin.Context) {
 		return
 	}
 
-	err := service.HandleUserQuery(r.DB.Db, user)
+	err := db.HandleUserQuery(r.DB.Db, user)
 	if err != nil {
 		switch err.Error() {
 		case "db_error":
